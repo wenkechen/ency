@@ -331,7 +331,7 @@ void writeOneKV(
         ofs.flush();
         quota = buffer_size;
     }
-    ofs << '(' << key << '.' << value << ')';
+    ofs << '(' << key << ',' << value << ')';
     quota -= consumed_quota;
     readOneKV(pq, fv, fidx);
 }
@@ -363,6 +363,8 @@ void merge_intermediate_files(const std::vector<std::string>& intermediate_files
     }
 
     output_file.close();
+
+    std::cout << "write into " << output_file_name << std::endl;
 }
 
 int main() {
@@ -378,14 +380,14 @@ int main() {
     };
     const std::string prefix = "/root/data/original_small_file_merged_";
 
-    auto splited_files = split_large_file(large_file_name, chunk_size, 0);
-    auto merged_files = merge_small_files(small_file_names, chunk_size, prefix);
+    // auto splited_files = split_large_file(large_file_name, chunk_size, 0);
+    // auto merged_files = merge_small_files(small_file_names, chunk_size, prefix);
 
-    // trial::ThreadPool pool;
-    // std::future<std::vector<std::string> > split_large_file_fut = pool.execute(split_large_file, large_file_name, chunk_size, 0);
-    // std::future<std::vector<std::string> > merge_small_files_fut = pool.execute(merge_small_files, small_file_names, chunk_size, prefix);
-    // auto splited_files = split_large_file_fut.get();
-    // auto merged_files = merge_small_files_fut.get();
+    trial::ThreadPool pool;
+    std::future<std::vector<std::string> > split_large_file_fut = pool.execute(split_large_file, large_file_name, chunk_size, 0);
+    std::future<std::vector<std::string> > merge_small_files_fut = pool.execute(merge_small_files, small_file_names, chunk_size, prefix);
+    auto splited_files = split_large_file_fut.get();
+    auto merged_files = merge_small_files_fut.get();
 
     intermediate_files.insert(intermediate_files.end(), splited_files.begin(), splited_files.end());
     intermediate_files.insert(intermediate_files.end(), merged_files.begin(), merged_files.end());

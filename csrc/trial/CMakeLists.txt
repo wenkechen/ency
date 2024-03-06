@@ -6,4 +6,4 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 	POSITION_INDEPENDENT_CODE ON
 	CUDA_RESOLVE_DEVICE_SYMBOLS ON
 )
-target_link_libraries(${PROJECT_NAME} PUBLIC "${TORCH_LIBRARIRES}")
+target_link_libraries(${PROJECT_NAME} PUBLIC "${TORCH_LIBRARIRES}" "-lpthread")
