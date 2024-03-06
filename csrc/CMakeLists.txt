@@ -75,4 +75,4 @@ list(APPEND COMMON_LIB_DIRS "${Python3_SITEARCH}/torch/lib")
 include_directories(${COMMON_HEADER_DIRS})
 link_directories(${COMMON_LIB_DIRS})
 
-add_subdirectory(tests)
+add_subdirectory(trial)

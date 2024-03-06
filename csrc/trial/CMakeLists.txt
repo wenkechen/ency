@@ -1,4 +1,4 @@
-project("tests.exe" LANGUAGES CXX CUDA)
+project("trial.exe" LANGUAGES CXX CUDA)
 file(GLOB_RECURSE exe_source_files "${PROJECT_SOURCE_DIR}/*.cpp" "${PROJECT_SOURCE_DIR}/*.cc" "${PROJECT_SOURCE_DIR}/*.cu")
 add_executable(${PROJECT_NAME} ${exe_source_files})
 target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR})

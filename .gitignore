@@ -47,6 +47,9 @@ cmake_device_link.*
 *.out
 *.app
 
+# Debug symbol on MacOS
+*.dSYM
+
 
 # CUDA #
 *.i
@@ -221,3 +224,6 @@ cython_debug/
 
 # vim
 *.swp
+
+# VS Code
+.vscode
