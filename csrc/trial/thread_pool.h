@@ -9,6 +9,32 @@
 #include <vector>
 
 namespace trial {
+// _TaskContainerBase exists only to serve as an abstract base for __TaskContainer.
+class _TaskContainerBase {
+public:
+    virtual ~_TaskContainerBase(){};
+    virtual void operator()() = 0;
+};
+
+// _TaskContainer takes a typename F, which must be Callable and MoveConstructible.
+// Furthermore, F must be callable with no argument. It can, for example, be a bind object with
+// no placeholders. F may or may not be CopyConstructible.
+template <typename F, std::enable_if_t<std::is_invocable_v<F&&>, int> = 0>
+class _TaskContainer : public _TaskContainerBase {
+public:
+    // here, std::forward is needed because we need the construction of _f not
+    // to bind an lvalue reference - it is not a guarantee that an object of
+    // type F is CopyConstructible, only that it is MoveConstructible.
+    _TaskContainer(F&& func) : _f(std::forward<F>(func)) {}
+    void operator()() override { _f(); };
+
+private:
+    F _f;
+};
+
+template <typename F>
+_TaskContainer(F) -> _TaskContainer<std::decay<F>>;
+
 class ThreadPool {
 public:
     ThreadPool(size_t nr_threads = std::thread::hardware_concurrency());
@@ -22,32 +48,6 @@ public:
     auto execute(F&&, Args&&...);
 
 private:
-    // _TaskContainerBase exists only to serve as an abstract base for __TaskContainer.
-    class _TaskContainerBase {
-    public:
-        virtual ~_TaskContainerBase(){};
-        virtual void operator()() = 0;
-    };
-
-    // _TaskContainer takes a typename F, which must be Callable and MoveConstructible.
-    // Furthermore, F must be callable with no argument. It can, for example, be a bind object with
-    // no placeholders. F may or may not be CopyConstructible.
-    template <typename F, std::enable_if_t<std::is_invocable_v<F&&>, int> = 0>
-    class _TaskContainer : public _TaskContainerBase {
-    public:
-        // here, std::forward is needed because we need the construction of _f not
-        // to bind an lvalue reference - it is not a guarantee that an object of
-        // type F is CopyConstructible, only that it is MoveConstructible.
-        _TaskContainer(F&& func) : _f(std::forward<F>(func)) {}
-        void operator()() override { _f(); };
-
-    private:
-        F _f;
-    };
-
-    template <typename F>
-    _TaskContainer(F) -> _TaskContainer<std::decay<F>>;
-
     std::vector<std::thread>
         _threads;
     std::mutex _task_mutex;
