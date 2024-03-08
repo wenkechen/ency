@@ -6,7 +6,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
 
 add_definitions(-D_GLIBCXX_USE_CXX_ABI=0)
 add_definitions(-DBUILD_CUTLASS_MIXED_GEMM)
-add_definitions(-DENABLE_BF16)
+# add_definitions(-DENABLE_BF16)
 add_definitions(-DUSE_NVTX)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DWMMA")
@@ -75,4 +75,5 @@ list(APPEND COMMON_LIB_DIRS "${Python3_SITEARCH}/torch/lib")
 include_directories(${COMMON_HEADER_DIRS})
 link_directories(${COMMON_LIB_DIRS})
 
-add_subdirectory(tests)
+add_subdirectory(linalg)
+add_subdirectory(trial)

@@ -25,7 +25,8 @@ if [ $1 = "lint" ]; then
 	bash scripts/lint.sh
 elif [ $1 = "clear" ]; then
 	$(delete_cmake_files "./csrc")
-	$(delete_cmake_files "./csrc/tests")
+	$(delete_cmake_files "./csrc/linalg")
+	$(delete_cmake_files "./csrc/trial")
 elif [ $1 = "build" ]; then
 	root_path=`pwd`
 	echo "Building csrc..."
