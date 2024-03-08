@@ -14,7 +14,7 @@ __global__ void expert_histogram_kernel(const int* index, int* count, const int 
     const int expert_rank = blockIdx.x;
     int cnt = 0;
     for (int tid = threadIdx.x; tid < total_num; tid += blockDim.x) {
-        if (ldg(index + tid) == expert_rank) {
+        if (__ldg(index + tid) == expert_rank) {
             ++cnt;
         }
     }
@@ -51,7 +51,7 @@ __global__ void scatter_index_kernel(const int* rank, const int* count, int* sca
     int* s_expert_offset = s_offset + blockIdx.x;
     int total_num_pad = ((total_num + blockDim.x - 1) / blockDim.x) * blockDim.x;
     for (int tid = threadIdx.x; tid < total_num_pad; tid += blockDim.x) {
-        int rank_id = tid < total_num ? ldg(&rank[tid]) : -1;
+        int rank_id = tid < total_num ? __ldg(&rank[tid]) : -1;
         const bool match = (rank_id == expert_rank);
         int active_mask = __ballot_sync(FULL_MASK, match);
 
@@ -81,7 +81,7 @@ __global__ void scatter_forward_kernel(const T* in, const int* index, T* out, co
     int src_offset = blockIdx.x * hidden_dim + thread_offset;
     float4 value = ((const float4*)in)[src_offset];
     for (int i = 0; i < top_k; ++i) {
-        int expert_index = ldg(&index[blockIdx.x * top_k + i]);
+        int expert_index = __ldg(&index[blockIdx.x * top_k + i]);
         int dst_offset = expert_index * hidden_dim + thread_offset;
         ((float4*)out)[dst_offset] = value;
     }
@@ -130,7 +130,7 @@ __global__ void scatter_backward_kernel(const T* dout, const int* index, T* din,
 
     float4 sum4 = make_float4(0.0f, 0.0f, 0.0f, 0.0f);
     for (int i = 0; i < top_k; ++i) {
-        int expert_index = ldg(&index[index_block_offset + i]);
+        int expert_index = __ldg(&index[index_block_offset + i]);
         int src_offset = expert_index * hidden_dim + thread_offset;
         float4 dout4 = load_vector(dout + src_offset);
         sum4.x += dout4.x, sum4.y += dout4.y, sum4.z += dout4.z, sum4.w += dout4.w;
@@ -183,8 +183,8 @@ __global__ void gather_forward_kernel(const T* in, const int* index, const T* we
     float4 sum4 = make_float4(0.0f, 0.0f, 0.0f, 0.0f);
     for (int i = 0; i < top_k; ++i) {
         int index_offset = index_block_offset + i;
-        float expert_weight = ldg(&weight[index_offset]);
-        int expert_index = ldg(&index[index_offset]);
+        float expert_weight = __ldg(&weight[index_offset]);
+        int expert_index = __ldg(&index[index_offset]);
 
         int src_offset = expert_index * hidden_dim + thread_offset;
         float4 value4 = load_vector(in + src_offset);
@@ -242,8 +242,8 @@ __global__ void gather_backward_kernel(
 
     for (int i = 0; i < top_k; ++i) {
         int index_offset = index_block_offset + i;
-        float expert_weight = ldg(&weight[index_offset]);
-        int expert_index = ldg(&index[index_offset]);
+        float expert_weight = __ldg(&weight[index_offset]);
+        int expert_index = __ldg(&index[index_offset]);
 
         float sum = 0.0f;
         for (tid = threadIdx.x; tid < hidden_dim; tid += blockDim.x) {

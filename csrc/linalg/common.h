@@ -133,4 +133,16 @@ int get_vector_size(const at::Tensor& t) {
 
 int cal_vector_size(int n_args, ...);
 
+class GPUClock {
+public:
+    GPUClock();
+    ~GPUClock();
+
+    void start();
+    float milliseconds();
+
+private:
+    cudaEvent_t start_, stop_;
+};
+
 }  // namespace linalg

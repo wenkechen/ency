@@ -13,4 +13,25 @@ int cal_vector_size(int n_args, ...) {
     va_end(ap);
     return vec_size;
 }
+
+GPUClock::GPUClock() {
+    cudaEventCreate(&start_);
+    cudaEventCreate(&stop_);
+    cudaEventRecord(start_);
+}
+GPUClock::~GPUClock() {
+    cudaEventDestroy(start_);
+    cudaEventDestroy(stop_);
+}
+void GPUClock::start() {
+    cudaEventRecord(start_);
+}
+float GPUClock::milliseconds() {
+    cudaEventRecord(stop_);
+    cudaEventSynchronize(stop_);
+    float time;
+    cudaEventElapsedTime(&time, start_, stop_);
+    return time;
+}
+
 }  // namespace linalg
