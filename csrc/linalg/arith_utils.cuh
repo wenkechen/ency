@@ -2,75 +2,14 @@
 
 #include <cuda_bf16.h>
 #include <cuda_fp16.h>
-#include <climits>
+
 #include <cfloat>
+#include <climits>
+#include <cmath>
 
 #include "common.h"
 
 namespace linalg {
-inline __device__ float2 bf1622float2(const __nv_bfloat162 val) {
-    return __bfloat1622float2(val);
-}
-
-inline __device__ __nv_bfloat162 float22bf162(const float2 val) {
-    return __float22bfloat162_rn(val);
-}
-
-inline __device__ __nv_bfloat162 bf162bf162(const __nv_bfloat16 val) {
-    return __bfloat162bfloat162(val);
-}
-
-inline __device__ __nv_bfloat162 bf16hadd2(const __nv_bfloat162 x, const __nv_bfloat162 y) {
-    return __hadd2(x, y);
-}
-
-inline __device__ __nv_bfloat16 bf16hadd(const __nv_bfloat16 x, const __nv_bfloat16 y) {
-    return __hadd(x, y);
-}
-
-inline __device__ __nv_bfloat162 bf16hsub2(const __nv_bfloat162 x, const __nv_bfloat162 y) {
-    return __hsub2(x, y);
-}
-
-inline __device__ __nv_bfloat16 bf16hsub(const __nv_bfloat16 x, const __nv_bfloat16 y) {
-    return __hsub(x, y);
-}
-
-inline __device__ __nv_bfloat162 bf16hmul2(const __nv_bfloat162 x, const __nv_bfloat162 y) {
-    return __hmul2(x, y);
-}
-
-inline __device__ __nv_bfloat16 bf16hmul(const __nv_bfloat16 x, const __nv_bfloat16 y) {
-    return __hmul(x, y);
-}
-
-inline __device__ __nv_bfloat162 bf16hfma2(const __nv_bfloat162 x, const __nv_bfloat162 y, const __nv_bfloat162 z) {
-    return __hfma2(x, y, z);
-}
-
-inline __device__ __nv_bfloat16 bf16hfma(const __nv_bfloat16 x, const __nv_bfloat16 y, const __nv_bfloat16 z) {
-    return __hfma(x, y, z);
-}
-
-inline __device__ __nv_bfloat162 bf16exp2(const __nv_bfloat162 x) {
-    return h2exp(x);
-}
-
-template <typename T>
-inline __device__ T ldg(const T* ptr) {
-    return __ldg(ptr);
-}
-
-// template <>
-// inline __device__ __nv_bfloat162 ldg(const __nv_bfloat162* ptr) {
-//     return __ldg(ptr);
-// }
-
-// template <>
-// inline __device__ __nv_bfloat16 ldg(const __nv_bfloat16* ptr) {
-//     return __ldg(ptr);
-// }
-
 // Get type2 from type or vice versa (applied to half and bfloat16)
 template <typename T>
 struct TypeConverter;
@@ -148,7 +87,7 @@ inline __device__ float2 type22float2(half2 val) {
 
 template <>
 inline __device__ float2 type22float2(__nv_bfloat162 val) {
-    return bf1622float2(val);
+    return __bfloat1622float2(val);
 }
 
 // Convert float2 to type2 (applied to half and blfoat16)
@@ -162,7 +101,7 @@ inline __device__ half2 float22type2(float2 val) {
 
 template <>
 inline __device__ __nv_bfloat162 float22type2(float2 val) {
-    return float22bf162(val);
+    return __float22bfloat162_rn(val);
 }
 
 // Convert type to type2 (applied to half and blfoat16)
@@ -176,17 +115,7 @@ inline __device__ half2 type2type2(half val) {
 
 template <>
 inline __device__ __nv_bfloat162 type2type2(__nv_bfloat16 val) {
-    return bf162bf162(val);
-}
-
-template <typename T>
-inline __device__ T hadd2(T a, T b) {
-    return __hadd2(a, b);
-}
-
-template <>
-inline __device__ __nv_bfloat162 hadd2(__nv_bfloat162 a, __nv_bfloat162 b) {
-    return bf16hadd2(a, b);
+    return __bfloat162bfloat162(val);
 }
 
 // gadd
@@ -197,16 +126,16 @@ inline __device__ T gadd(T a, T b) {
 
 template <>
 inline __device__ __nv_bfloat162 gadd(__nv_bfloat162 a, __nv_bfloat162 b) {
-    return bf16hadd2(a, b);
+    return __hadd2(a, b);
 }
 
 template <>
 inline __device__ __nv_bfloat16 gadd(__nv_bfloat16 a, __nv_bfloat16 b) {
-    return bf16hadd(a, b);
+    return __hadd(a, b);
 }
 
 inline __device__ __nv_bfloat16 gadd(__nv_bfloat16 a, float b) {
-    return bf16hadd(a, __float2bfloat16_rn(b));
+    return __hadd(a, __float2bfloat16_rn(b));
 }
 
 template <>
@@ -221,20 +150,18 @@ inline __device__ half gadd(half a, half b) {
 
 template <>
 inline __device__ float2 gadd(float2 a, float2 b) {
-    float2 c;
-    c.x = a.x + b.x;
-    c.y = a.y + b.y;
-    return c;
+    a.x += b.x;
+    a.y += b.y;
+    return a;
 }
 
 template <>
 inline __device__ float4 gadd(float4 a, float4 b) {
-    float4 c;
-    c.x = a.x + b.x;
-    c.y = a.y + b.y;
-    c.z = a.z + b.z;
-    c.w = a.w + b.w;
-    return c;
+    a.x += b.x;
+    a.y += b.y;
+    a.z += b.z;
+    a.w += b.w;
+    return a;
 }
 
 template <typename T>
@@ -272,57 +199,171 @@ inline __device__ float gadd(float4 a) {
     return gadd(a.x, a.y, a.z, a.w);
 }
 
+// gsub
 template <typename T>
-inline __device__ T hsub2(T a, T b) {
+inline __device__ T gsub(T a, T b) {
+    return a - b;
+}
+
+template <>
+inline __device__ __nv_bfloat162 gsub(__nv_bfloat162 a, __nv_bfloat162 b) {
     return __hsub2(a, b);
 }
 
 template <>
-inline __device__ __nv_bfloat162 hsub2(__nv_bfloat162 a, __nv_bfloat162 b) {
-    return bf16hsub2(a, b);
+inline __device__ __nv_bfloat16 gsub(__nv_bfloat16 a, __nv_bfloat16 b) {
+    return __hsub(a, b);
 }
 
+inline __device__ __nv_bfloat16 gsub(__nv_bfloat16 a, float b) {
+    return __hsub(a, __float2bfloat16_rn(b));
+}
+
+template <>
+inline __device__ half2 gsub(half2 a, half2 b) {
+    return __hsub2(a, b);
+}
+
+template <>
+inline __device__ half gsub(half a, half b) {
+    return __hsub(a, b);
+}
+
+template <>
+inline __device__ float2 gsub(float2 a, float2 b) {
+    a.x -= b.x;
+    a.y -= b.y;
+    return a;
+}
+
+template <>
+inline __device__ float4 gsub(float4 a, float4 b) {
+    a.x -= b.x;
+    a.y -= b.y;
+    a.z -= b.z;
+    a.w -= b.w;
+    return a;
+}
+
+// gmul
 template <typename T>
-inline __device__ T hmul2(T a, T b) {
+inline __device__ T gmul(T a, T b) {
+    return a * b;
+}
+
+template <>
+inline __device__ __nv_bfloat162 gmul(__nv_bfloat162 a, __nv_bfloat162 b) {
     return __hmul2(a, b);
 }
 
 template <>
-inline __device__ __nv_bfloat162 hmul2(__nv_bfloat162 a, __nv_bfloat162 b) {
-    return bf16hmul2(a, b);
+inline __device__ __nv_bfloat16 gmul(__nv_bfloat16 a, __nv_bfloat16 b) {
+    return __hmul(a, b);
+}
+
+inline __device__ __nv_bfloat16 gmul(__nv_bfloat16 a, float b) {
+    return __hmul(a, __float2bfloat16_rn(b));
+}
+
+template <>
+inline __device__ half2 gmul(half2 a, half2 b) {
+    return __hmul2(a, b);
+}
+
+template <>
+inline __device__ half gmul(half a, half b) {
+    return __hmul(a, b);
+}
+
+template <>
+inline __device__ float2 gmul(float2 a, float2 b) {
+    a.x *= b.x;
+    a.y *= b.y;
+    return a;
+}
+
+template <>
+inline __device__ float4 gmul(float4 a, float4 b) {
+    a.x *= b.x;
+    a.y *= b.y;
+    a.z *= b.z;
+    a.w *= b.w;
+    return a;
 }
 
 template <typename T>
-inline __device__ T hmul2(T a, T b, T c) {
-    return hmul2(hmul2(a, b), c);
+inline __device__ T gmul(T a, T b, T c) {
+    return gmul(gmul(a, b), c);
 }
 
 template <typename T>
-inline __device__ T hmul(T a, T b, T c) {
-    return a * b * c;
+inline __device__ T gmul(T a, T b, T c, T d) {
+    return gmul(gmul(a, b), gmul(c, d));
 }
 
-inline __device__ __nv_bfloat162 hmul(__nv_bfloat162 a, __nv_bfloat162 b, __nv_bfloat162 c) {
-    return hmul2(a, b, c);
+// gfma
+template <typename T>
+inline __device__ T gfma(T a, T b, T c) {
+    return gadd(gmul(a, b), c);
 }
 
-inline __device__ __nv_bfloat16 hmul(__nv_bfloat16 a, __nv_bfloat16 b, __nv_bfloat16 c) {
-    return bf16hmul(bf16hmul(a, b), c);
+inline __device__ __nv_bfloat162 gfma(__nv_bfloat162 a, __nv_bfloat162 b, __nv_bfloat162 c) {
+    return __hfma2(a, b, c);
+}
+
+inline __device__ __nv_bfloat16 gfma(__nv_bfloat16 a, __nv_bfloat16 b, __nv_bfloat16 c) {
+    return __hfma(a, b, c);
+}
+
+inline __device__ half2 gfma(half2 a, half2 b, half2 c) {
+    return __hfma2(a, b, c);
+}
+
+inline __device__ half gfma(half a, half b, half c) {
+    return __hfma(a, b, c);
 }
 
 template <typename T>
-inline __device__ T fma(T a, T b, T c) {
-    return gadd(hmul(a, b), c);
+inline __device__ T gfma(T a, T b, T c, T d) {
+    return gadd(gmul(a, b, c), d);
 }
 
+// gexp
 template <typename T>
-inline __device__ T fma(T a, T b, T c, T d) {
-    return gadd(hmul(a, b, c), d);
+inline __device__ T gexp(const T a) {
+    return (T)std::exp(float(a));
 }
 
-template <typename T>
-inline __device__ T hexp2(const T x) {
-    return h2exp(x);
+inline __device__ __nv_bfloat162 gexp(__nv_bfloat162 a) {
+    return h2exp(a);
+}
+
+inline __device__ __nv_bfloat16 gexp(__nv_bfloat16 a) {
+    return hexp(a);
+}
+
+inline __device__ half2 gexp(half2 a) {
+    return h2exp(a, b, c);
+}
+
+inline __device__ half gexp(half a) {
+    return hexp(a, b, c);
+}
+
+template <>
+inline __device__ float2 gexp(float2 a) {
+    a.x = std::exp(a.x);
+    a.y = std::exp(a.y);
+    return a;
+}
+
+template <>
+inline __device__ float4 gexp(float4 a) {
+    a.x = std::exp(a.x);
+    a.y = std::exp(a.y);
+    a.z = std::exp(a.z);
+    a.w = std::exp(a.w);
+    return a;
 }
 
 // gmax
