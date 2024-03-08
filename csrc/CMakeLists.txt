@@ -6,7 +6,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
 
 add_definitions(-D_GLIBCXX_USE_CXX_ABI=0)
 add_definitions(-DBUILD_CUTLASS_MIXED_GEMM)
-add_definitions(-DENABLE_BF16)
+# add_definitions(-DENABLE_BF16)
 add_definitions(-DUSE_NVTX)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DWMMA")
