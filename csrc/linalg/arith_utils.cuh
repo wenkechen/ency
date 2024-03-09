@@ -1,4 +1,5 @@
 #pragma once
+#include <c10/cuda/CUDAMathCompat.h>
 
 #include <cuda_bf16.h>
 #include <cuda_fp16.h>
@@ -500,6 +501,19 @@ inline __device__ float2 gminimmum() {
 template <>
 inline __device__ float4 gminimmum() {
     return make_float4(-FLT_MAX, -FLT_MAX, -FLT_MAX, -FLT_MAX);
+}
+
+template <typename T>
+inline __device__ T fast_tanh(T x) {
+    return c10::cuda::compat::tanh(x);
+}
+
+template <>
+inline __device__ float fast_tanh(float x) {
+    float y;
+    // TODO: check whether volatile is must
+    asm volatile("tanh.approx.f32 %0, %1;" : "=f"(y) : "f"(x));
+    return y;
 }
 
 }  // namespace linalg

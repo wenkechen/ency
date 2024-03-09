@@ -4,7 +4,6 @@ import torch
 import triton
 import triton.language as tl
 
-
 @triton.jit
 def rotary_kernel(
     OUT,  # Pointers to matrices
