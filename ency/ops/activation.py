@@ -1,6 +1,7 @@
 import torch
-from ency.utils import FastFunction
 from torch.autograd.function import BackwardCFunction
+
+from ency.utils import FastFunction
 
 
 class ActivationFunction(FastFunction):
@@ -21,11 +22,12 @@ class ActivationFunction(FastFunction):
         dx = torch.ops.linalg.activation_bwd(do, x, ctx.activation_type)
         return dx
 
+
 class FastActivation(torch.nn.Module):
     def __init__(self, activation_type: int = 1) -> None:
         super().__init__()
-        assert activation_type in [0,1,2,3]
+        assert activation_type in [0, 1, 2, 3]
         self.activation_type = activation_type
-    
+
     def forward(self, x):
         return ActivationFunction.apply(x, self.activation_type)

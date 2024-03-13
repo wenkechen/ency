@@ -22,6 +22,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DWMMA")
 find_package(CUDAToolkit REQUIRED)
 set(COMMON_HEADER_DIRS
 	${CUDAToolkit_INCLUDE_DIRS}
+	${PROJECT_PARENT_DIR}/3rdparty/cutlass/include
+	${PROJECT_PARENT_DIR}/3rdparty/cutlass/tools/util/include
 )
 set(COMMON_LIB_DIRS ${CUDAToolkit_LIBRARY_DIR})
 
